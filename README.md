@@ -11,6 +11,7 @@ I started this project in order to learn more about internet protocol and using 
 ## Structure
 
 **This field will be iterated upon and elaborated within as the complexity of the project progresses**
+
 So far, all the code does is run a node server that returns a short response message. I can request this message as long as the receiving device is on the same local network, and I input the exact IP of the server.
 
 ## Use
