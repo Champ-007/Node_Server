@@ -6,6 +6,7 @@
     --border:  #e4e4e7;
     --text:    #18181b;
     --muted:   #71717a;
+    --error:   #dc2626;
     --accent:      #FFBB00;
     --accent-text: #B07D00;   /* darker gold so small text is readable on white */
     --on-accent:   #18181b;   /* text that sits on top of the accent color */
@@ -18,9 +19,11 @@ body.dark {
     --border:  #34343a;
     --text:    #fafafa;
     --muted:   #a1a1aa;
+    --error:   #f87171;
     --accent:      #FFBB00;
     --accent-text: #FFBB00;   /* plenty of contrast on dark backgrounds */
     --on-accent:   #18181b;
+    color-scheme: dark;   /* dark date picker and number arrows */
 }
 
 /* ---------- Base ---------- */
@@ -151,7 +154,6 @@ button:hover { background: var(--inner); }
     outline: none;
     transform: translateY(-2px);
     border-color: var(--accent);
-    box-shadow: 0 6px 18px rgb(255 187 0 / 0.18);   /* soft gold glow */
 }
 
 .task-top {
@@ -201,3 +203,56 @@ button:hover { background: var(--inner); }
 
 .details dt { color: var(--muted); }
 .details dd { margin: 0; text-align: right; }
+
+/* ---------- New task card ---------- */
+.editor {
+    grid-column: 1 / -1;   /* spans the whole row, so it's bigger than a normal card */
+    border-color: var(--accent);
+}
+
+.editor:hover { transform: none; }   /* don't lift like normal cards */
+
+.editor form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+.editor h3, .editor-actions, .form-error { grid-column: 1 / -1; }   /* full width */
+
+.form-error { margin: 0; color: var(--error); font-size: 0.85rem; }
+.editor h3 { margin: 0; }
+
+.field span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.field input {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.15s;
+}
+
+.field input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* One column on phones */
+@media (max-width: 560px) {
+    .editor form { grid-template-columns: 1fr; }
+}

@@ -14,7 +14,7 @@ const endpoints = {
 
 // Introduction
 console.log("Server start");
-console.log("Version Stupid Beta 1.2.2");
+console.log("Version Stupid Beta 1.3");
 
 // Safely kill the server
 function Shutdown(signal)
@@ -37,6 +37,19 @@ function Shutdown(signal)
 
 }
 
+// Check that task from frontend is correct
+function validateTask(task)
+{
+    if (typeof task.course !== 'string' || task.course.trim() === '') return 'Course is required';
+    if (typeof task.name !== 'string' || task.name.trim() === '')     return 'Task name is required';
+    if (task.dueDate != null && typeof task.dueDate !== 'string')     return 'Due date must be text';
+
+    const hours = task.estimatedTotalHours;
+    if (hours != null && (typeof hours !== 'number' || hours < 0))    return 'Hours must be a number 0 or higher';
+
+    return null;
+}
+
 // Launch server to port 3000
 const server = http.createServer(function (request, response) {
     console.log("Request received.");
@@ -44,13 +57,57 @@ const server = http.createServer(function (request, response) {
 
     const entry = endpoints[request.url];
     
-        if (request.url === '/api/tasks' && request.method === 'GET')
-        {
-            console.log(`API endpoint: ${request.url}`);
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify(db.getTasks()));
-            return;
-        }
+    if (request.url === '/api/tasks' && request.method === 'GET')
+    {
+        console.log(`API endpoint: ${request.url}`);
+        response.writeHead(200, {'Content-Type': 'application/json'});
+        response.end(JSON.stringify(db.getTasks()));
+        return;
+    }
+
+    if (request.url === '/api/tasks' && request.method === 'POST')
+    {
+        // The body arrives in chunks; collect them, then handle it all at the end
+        let body = '';
+        request.on('data', function (chunk) { body += chunk; });
+        request.on('end', function () {
+            let task;
+            try
+            {
+                task = JSON.parse(body);
+            }
+            catch
+            {
+                response.writeHead(400, {'Content-Type': 'text/plain'});
+                response.end('Invalid JSON');
+                return;
+            }
+
+            // Never trust the browser: check the values again here
+            const error = validateTask(task);
+            if (error)
+            {
+                response.writeHead(400, {'Content-Type': 'text/plain'});
+                response.end(error);
+                return;
+            }
+
+            try
+            {
+                const id = db.addTask(task);
+                console.log(`Added task ${id}`);
+                response.writeHead(201, {'Content-Type': 'application/json'});
+                response.end(JSON.stringify(db.getTask(id)));   // send back the saved row
+            }
+            catch (err)
+            {
+                console.error(err);
+                response.writeHead(500, {'Content-Type': 'text/plain'});
+                response.end('Could not save task');
+            }
+        });
+        return;
+    }
 
     if (!entry)
     {

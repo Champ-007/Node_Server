@@ -22,11 +22,12 @@
         <section class="card">
             <div class="card-head">
                 <h2>Tasks</h2>
-                <button id="addTask" class="accent-btn icon-btn" aria-label="Add task">+</button>
+                <button id="addTaskButton" class="accent-btn icon-btn" aria-label="Add task">+</button>
             </div>
 
             <!-- Shown until loadTasks() finishes -->
             <div id="loader" class="spinner" aria-label="Loading tasks"></div>
+            <p id="status" class="status" hidden></p>
 
             <ul id="taskList"></ul>
         </section>
