@@ -1,0 +1,203 @@
+/* ---------- Colors & fonts ---------- */
+:root {
+    --bg:      #fafafa;
+    --surface: #ffffff;
+    --inner:   #f4f4f5;   /* task cards sit on this inside the big card */
+    --border:  #e4e4e7;
+    --text:    #18181b;
+    --muted:   #71717a;
+    --accent:      #FFBB00;
+    --accent-text: #B07D00;   /* darker gold so small text is readable on white */
+    --on-accent:   #18181b;   /* text that sits on top of the accent color */
+}
+
+body.dark {
+    --bg:      #161618;
+    --surface: #1e1e21;
+    --inner:   #26262a;
+    --border:  #34343a;
+    --text:    #fafafa;
+    --muted:   #a1a1aa;
+    --accent:      #FFBB00;
+    --accent-text: #FFBB00;   /* plenty of contrast on dark backgrounds */
+    --on-accent:   #18181b;
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.5;
+    transition: background 0.2s, color 0.2s;
+}
+
+h1, h2 {
+    margin: 0;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+}
+
+h1 { color: var(--accent); }
+
+/* Header and main share the same centered width */
+.header-inner, main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 12px 20px;
+}
+
+main { padding-top: 32px; }
+
+/* ---------- Header ---------- */
+header { border-bottom: 1px solid var(--border); }
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+button {
+    font: inherit;
+    padding: 6px 14px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+button:hover { background: var(--inner); }
+
+/* Gold buttons: theme toggle and the + button */
+.accent-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 500;
+    transition: filter 0.2s ease;
+}
+
+/* Fade slightly brighter on hover */
+.accent-btn:hover {
+    background: var(--accent);
+    filter: brightness(1.15);
+}
+
+/* ---------- Big tasks card ---------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.icon-btn {
+    width: 38px;   /* same height as the toggle button */
+    height: 38px;
+    padding: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+/* ---------- Loading dial ---------- */
+.spinner {
+    width: 32px;
+    height: 32px;
+    margin: 32px auto;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.status { text-align: center; color: var(--muted); margin: 24px 0; }
+
+/* ---------- Task cards ---------- */
+#taskList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    align-items: start;   /* only the hovered card grows, not its whole row */
+}
+
+.task {
+    background: var(--inner);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: default;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.task:hover, .task:focus {
+    outline: none;
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgb(255 187 0 / 0.18);   /* soft gold glow */
+}
+
+.task-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.course { color: var(--accent-text); font-weight: 700; }
+
+.name { margin: 6px 0 10px; font-size: 1.05rem; font-weight: 500; }
+
+/* Progress bar: JS sets the span's width */
+.bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+/* ---------- Hover details ---------- */
+/* Animating grid rows from 0fr to 1fr smoothly expands to the content's height */
+.details {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.details > div { overflow: hidden; }
+
+.task:hover .details, .task:focus .details { grid-template-rows: 1fr; }
+
+.details dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    margin: 12px 0 0;
+    font-size: 0.85rem;
+}
+
+.details dt { color: var(--muted); }
+.details dd { margin: 0; text-align: right; }

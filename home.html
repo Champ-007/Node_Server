@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="home.css">
+    <script src="home.js" defer></script>
+</head>
+<body class="dark">
+    <header>
+        <div class="header-inner">
+            <h1>Champ's Task Management</h1>
+            <button id="darkMode" class="accent-btn">Toggle Dark Mode</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="card">
+            <div class="card-head">
+                <h2>Tasks</h2>
+                <button id="addTask" class="accent-btn icon-btn" aria-label="Add task">+</button>
+            </div>
+
+            <!-- Shown until loadTasks() finishes -->
+            <div id="loader" class="spinner" aria-label="Loading tasks"></div>
+
+            <ul id="taskList"></ul>
+        </section>
+    </main>
+</body>
+</html>
