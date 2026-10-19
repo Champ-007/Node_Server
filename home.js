@@ -1,4 +1,21 @@
 
+let tasksList = [];
+let order = 'due';
+
+const sortMethod = {
+    due:    (a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'),
+    course: (a, b) => a.course.localeCompare(b.course),
+    name:   (a, b) => a.name.localeCompare(b.name),
+    remaining: (a, b) => remainingHours(b) - remainingHours(a)   // most hours left first
+};
+
+// Tasks with no estimate count as -1 so they sort to the bottom
+function remainingHours(task)
+{
+    if (task.estimatedTotalHours == null) return -1;
+    return Math.max(task.estimatedTotalHours - task.loggedHours, 0);
+}
+
 function createElement(tag, className, text)
 {
     const element = document.createElement(tag);
@@ -7,11 +24,10 @@ function createElement(tag, className, text)
     return element;
 }
 
-// "2026-10-20" -> "10/20"
-// Split the text instead of using new Date(), which reads it as UTC and can show the day before
+// Split the text mm/dd
 function formatDueDate(dueDate)
 {
-    const [, month, day] = dueDate.split('-');   // skip the year
+    const [year, month, day] = dueDate.split('-');
     return `${month}/${day}`;
 }
 
@@ -31,35 +47,31 @@ function createTaskElement(task)
         createElement('span', 'due', task.dueDate ? `Due: ${formatDueDate(task.dueDate)}` : 'No due date')
     );
 
-    // Progress bar
-    const bar = createElement('div', 'bar');
-    const fill = createElement('span');
-    fill.style.width = (estimated ? Math.min(logged / estimated * 100, 100) : 0) + '%';
-    bar.append(fill);
-
-    // Details, hidden until hover: a list of label/value pairs
-    const dl = createElement('dl');
-    const rows = [
-        ['Logged',    `${logged} h`],
+    // Details, hidden until hover: a table with labels on top, values underneath
+    const columns = [
         ['Estimated', estimated ? `${estimated} h` : '—'],
+        ['Logged',    `${logged} h`],
         ['Remaining', estimated ? `${Math.max(estimated - logged, 0)} h` : '—']
     ];
-    for (const [label, value] of rows)
+    const table = createElement('table', 'hours');
+    const headRow = table.createTHead().insertRow();
+    const valueRow = table.createTBody().insertRow();
+    for (const [label, value] of columns)
     {
-        dl.append(createElement('dt', null, label), createElement('dd', null, value));
+        headRow.append(createElement('th', null, label));
+        valueRow.append(createElement('td', null, value));
     }
 
     // Two wrappers so the CSS can animate the height smoothly
     const details = createElement('div', 'details');
     const detailsInner = createElement('div');
-    detailsInner.append(dl);
+    detailsInner.append(table);
     details.append(detailsInner);
 
     // Assemble
     li.append(
         top,
         createElement('h3', 'name', task.name),
-        bar,
         details
     );
 
@@ -168,17 +180,40 @@ function createNewTask()
     return li;
 }
 
-// Bring an already-open new task card back into view
+// Refocus new task card rather than making a new one
 function refocusNewTask(card)
 {
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     card.querySelector('input').focus({ preventScroll: true });
+}
 
-    // Quick gold pulse so it's obvious which card is open
-    // card.animate(
-    //     [{ boxShadow: '0 0 0 0 var(--accent)' }, { boxShadow: '0 0 0 6px transparent' }],
-    //     { duration: 500, easing: 'ease-out' }
-    // );
+function renderTasks()
+{
+    const tasksBody = document.getElementById('taskList');
+
+    // Text from the filter panel, lowercased so matching ignores case
+    const courseQuery = document.getElementById('filterCourse').value.trim().toLowerCase();
+    const nameQuery = document.getElementById('filterName').value.trim().toLowerCase();
+
+    // filter() makes a copy, so sorting doesn't reorder tasksList itself
+    const orderedList = tasksList
+        .filter(task => task.course.toLowerCase().includes(courseQuery) && task.name.toLowerCase().includes(nameQuery))
+        .sort(sortMethod[order]);
+
+    tasksBody.replaceChildren();
+    for (const task of orderedList)
+    {
+        tasksBody.append(createTaskElement(task));
+    }
+
+    if (orderedList.length === 0)
+    {
+        showStatus(tasksList.length === 0 ? 'No tasks.' : 'No matching tasks.');
+    }
+    else
+    {
+        document.getElementById('status').hidden = true;
+    }
 }
 
 async function loadTasks()
@@ -192,21 +227,14 @@ async function loadTasks()
     loader.hidden = false;
     status.hidden = true;
 
-    // Forced wait to show off the loading dial
-    // await new Promise(resolve => setTimeout(resolve, 1500));
-
     try
     {
         const response = await fetch('/api/tasks');
         const tasks = await response.json();
 
-        for (const task of tasks)
-        {
-            tasksBody.append(createTaskElement(task));
-        }
+        tasksList = tasks;
 
-        if (tasks.length === 0)
-            showStatus('No tasks yet.');
+        renderTasks();
     }
     catch (err)
     {
@@ -214,7 +242,7 @@ async function loadTasks()
         showStatus('Could not load tasks.');
     }
 
-    // Hide the loader instead of removing it, so loadTasks() can run again
+    // Hide the loader
     loader.hidden = true;
 }
 
@@ -248,5 +276,49 @@ newTaskButton.addEventListener('click', function() {
         refocusNewTask(newTaskCard);
     }
 });
+
+// ---------- Filter panel ----------
+const filterButton = document.getElementById('filterButton');
+const filterPanel = document.getElementById('filterPanel');
+
+function setFilterPanel(open)
+{
+    filterPanel.classList.toggle('open', open);
+    filterButton.setAttribute('aria-expanded', open);
+}
+
+filterButton.addEventListener('click', function() {
+    setFilterPanel(!filterPanel.classList.contains('open'));
+});
+
+// Close when clicking anywhere outside the panel (the button handles itself above)
+document.addEventListener('click', function(event) {
+    if (!filterPanel.contains(event.target) && event.target !== filterButton)
+        setFilterPanel(false);
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && filterPanel.classList.contains('open'))
+    {
+        setFilterPanel(false);
+        filterButton.focus();
+    }
+});
+
+// Typing in either box re-filters right away
+document.getElementById('filterCourse').addEventListener('input', renderTasks);
+document.getElementById('filterName').addEventListener('input', renderTasks);
+
+// Sort buttons: data-sort matches a key in sortMethod
+const sortButtons = filterPanel.querySelectorAll('[data-sort]');
+for (const button of sortButtons)
+{
+    button.addEventListener('click', function() {
+        order = button.dataset.sort;
+        for (const other of sortButtons)
+            other.classList.toggle('active', other === button);
+        renderTasks();
+    });
+}
 
 loadTasks();

@@ -22,7 +22,24 @@
         <section class="card">
             <div class="card-head">
                 <h2>Tasks</h2>
-                <button id="addTaskButton" class="accent-btn icon-btn" aria-label="Add task">+</button>
+                <div class="card-actions">
+                    <button id="filterButton" class="text-btn" aria-expanded="false" aria-controls="filterPanel">Filter</button>
+                    <button id="addTaskButton" class="accent-btn icon-btn" aria-label="Add task">+</button>
+
+                    <!-- Opens over the page when Filter is pressed -->
+                    <div id="filterPanel" class="filter-panel">
+                        <label class="field"><span>Course</span><input id="filterCourse" type="search" placeholder="CS 101"></label>
+                        <label class="field"><span>Name</span><input id="filterName" type="search" placeholder="Lab 3"></label>
+                        <div class="field">
+                            <span>Sort by</span>
+                            <div class="sort-buttons">
+                                <button type="button" data-sort="due" class="active">Due date</button>
+                                <button type="button" data-sort="remaining">Remaining</button>
+                                <button type="button" data-sort="name">A–Z</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Shown until loadTasks() finishes -->
@@ -30,6 +47,9 @@
             <p id="status" class="status" hidden></p>
 
             <ul id="taskList"></ul>
+        </section>
+        <section class="card">
+            <p>Lorem Ipsum.</p>
         </section>
     </main>
 </body>

@@ -8,7 +8,7 @@
     --muted:   #71717a;
     --error:   #dc2626;
     --accent:      #FFBB00;
-    --accent-text: #B07D00;   /* darker gold so small text is readable on white */
+    --accent-text: #FFBB00;   /* darker gold so small text is readable on white */
     --on-accent:   #18181b;   /* text that sits on top of the accent color */
 }
 
@@ -53,7 +53,13 @@ h1 { color: var(--accent); }
     padding: 12px 20px;
 }
 
-main { padding-top: 32px; }
+/* Big cards stack with the same space between them as above the first one */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+}
 
 /* ---------- Header ---------- */
 header { border-bottom: 1px solid var(--border); }
@@ -89,7 +95,7 @@ button:hover { background: var(--inner); }
 /* Fade slightly brighter on hover */
 .accent-btn:hover {
     background: var(--accent);
-    filter: brightness(1.15);
+    /* filter: brightness(1.15); */
 }
 
 /* ---------- Big tasks card ---------- */
@@ -107,9 +113,66 @@ button:hover { background: var(--inner); }
     margin-bottom: 16px;
 }
 
+/* Filter and + buttons, side by side */
+.card-actions {
+    position: relative;   /* the filter panel is placed against this */
+    display: flex;
+    gap: 8px;
+}
+
+.card-actions > button { height: 38px; }   /* same height as the toggle button */
+
+/* Plain, low-contrast text button (Filter) */
+.text-btn {
+    /* border-color: transparent; */
+    color: var(--muted);
+}
+
+.text-btn:hover {
+    background: transparent;
+    color: var(--muted);
+}
+
+/* ---------- Filter panel ---------- */
+/* Floats under the buttons, over the tasks. Fades/slides in when .open is added */
+.filter-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 10;
+    width: min(320px, calc(100vw - 32px));
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); */
+
+    visibility: hidden;
+}
+
+.filter-panel.open {
+    visibility: visible;
+    transform: none;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.sort-buttons button { flex: 1; font-size: 0.85rem; padding: 6px 8px; }
+
+/* The sort currently in use */
+.sort-buttons button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+}
+
 .icon-btn {
-    width: 38px;   /* same height as the toggle button */
-    height: 38px;
+    width: 38px;
     padding: 0;
     font-size: 1.4rem;
     line-height: 1;
@@ -136,9 +199,8 @@ button:hover { background: var(--inner); }
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: 1fr;   /* one card per row */
     gap: 12px;
-    align-items: start;   /* only the hovered card grows, not its whole row */
 }
 
 .task {
@@ -150,9 +212,9 @@ button:hover { background: var(--inner); }
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
-.task:hover, .task:focus {
+.task:hover, .task:focus-visible {   /* focus-visible: Tab expands a card, clicking doesn't */
     outline: none;
-    transform: translateY(-2px);
+    /* transform: translateY(-2px); */
     border-color: var(--accent);
 }
 
@@ -165,21 +227,7 @@ button:hover { background: var(--inner); }
 
 .course { color: var(--accent-text); font-weight: 700; }
 
-.name { margin: 6px 0 10px; font-size: 1.05rem; font-weight: 500; }
-
-/* Progress bar: JS sets the span's width */
-.bar {
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.bar span {
-    display: block;
-    height: 100%;
-    background: var(--accent);
-}
+.name { margin: 6px 0 0; font-size: 1.05rem; font-weight: 500; }
 
 /* ---------- Hover details ---------- */
 /* Animating grid rows from 0fr to 1fr smoothly expands to the content's height */
@@ -191,22 +239,22 @@ button:hover { background: var(--inner); }
 
 .details > div { overflow: hidden; }
 
-.task:hover .details, .task:focus .details { grid-template-rows: 1fr; }
+.task:hover .details, .task:focus-visible .details { grid-template-rows: 1fr; }
 
-.details dl {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 2px 12px;
-    margin: 12px 0 0;
+/* Hours table: equal-width columns, centered */
+.hours {
+    width: 100%;
+    table-layout: fixed;   /* split width evenly instead of sizing to content */
+    margin-top: 12px;
+    border-collapse: collapse;
     font-size: 0.85rem;
+    text-align: center;
 }
 
-.details dt { color: var(--muted); }
-.details dd { margin: 0; text-align: right; }
+.hours th { color: var(--muted); font-weight: 400; padding-bottom: 2px; }
 
 /* ---------- New task card ---------- */
 .editor {
-    grid-column: 1 / -1;   /* spans the whole row, so it's bigger than a normal card */
     border-color: var(--accent);
 }
 
