@@ -42,7 +42,8 @@ function validateTask(task)
 {
     if (typeof task.course !== 'string' || task.course.trim() === '') return 'Course is required';
     if (typeof task.name !== 'string' || task.name.trim() === '')     return 'Task name is required';
-    if (task.dueDate != null && typeof task.dueDate !== 'string')     return 'Due date must be text';
+    if (task.dueDate != null && (typeof task.dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(task.dueDate)))
+        return 'Due date must be a date and time (YYYY-MM-DDTHH:MM)';
 
     const hours = task.estimatedTotalHours;
     if (hours != null && (typeof hours !== 'number' || hours < 0))    return 'Hours must be a number 0 or higher';

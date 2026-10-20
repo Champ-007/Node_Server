@@ -157,12 +157,18 @@ button:hover { background: var(--inner); }
     transform: none;
 }
 
+/* Two by two, so four buttons fit the panel width */
 .sort-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
 }
 
-.sort-buttons button { flex: 1; font-size: 0.85rem; padding: 6px 8px; }
+.sort-buttons button { font-size: 0.85rem; padding: 6px 8px; }
+
+/* Arrow on the active sort: up = low to high, down = high to low */
+.sort-buttons button[data-direction="up"]::after   { content: ' ↑'; }
+.sort-buttons button[data-direction="down"]::after { content: ' ↓'; }
 
 /* The sort currently in use */
 .sort-buttons button.active {
@@ -212,20 +218,31 @@ button:hover { background: var(--inner); }
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
-.task:hover, .task:focus-visible {   /* focus-visible: Tab expands a card, clicking doesn't */
+.task:hover, .task:focus-visible {
     outline: none;
-    /* transform: translateY(-2px); */
     border-color: var(--accent);
 }
 
+/* Course + name on the left, "..." button pinned top right */
 .task-top {
     display: flex;
     justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--muted);
+    align-items: flex-start;
+    gap: 12px;
 }
 
-.course { color: var(--accent-text); font-weight: 700; }
+.task-title { min-width: 0; }   /* lets long names wrap instead of pushing the button */
+
+.course { display: block; font-size: 0.8rem; color: var(--accent-text); font-weight: 700; }
+
+/* Small "..." button */
+.task-menu {
+    flex-shrink: 0;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    letter-spacing: 1px;
+}
 
 .name { margin: 6px 0 0; font-size: 1.05rem; font-weight: 500; }
 
@@ -252,6 +269,9 @@ button:hover { background: var(--inner); }
 }
 
 .hours th { color: var(--muted); font-weight: 400; padding-bottom: 2px; }
+
+/* Background color is set from JS, light enough for dark text in both themes */
+.hours .priority { color: var(--on-accent); border-radius: 6px; }
 
 /* ---------- New task card ---------- */
 .editor {
@@ -293,6 +313,26 @@ button:hover { background: var(--inner); }
     outline: none;
     border-color: var(--accent);
 }
+
+/* ---------- Tab autocomplete ---------- */
+/* The ghost copies the input's padding and border so its text lines up with what's typed */
+.autocomplete { position: relative; }
+
+.ghost {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    font: inherit;
+    white-space: pre;
+    overflow: hidden;
+    pointer-events: none;   /* clicks go through to the input */
+}
+
+.ghost-typed { visibility: hidden; }
+.ghost-rest { color: var(--muted); }
 
 .editor-actions {
     display: flex;
