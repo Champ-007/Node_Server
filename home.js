@@ -145,8 +145,21 @@ function createTaskElement(task)
     menuButton.type = 'button';
     menuButton.setAttribute('aria-label', 'Task options');
 
+    // Dropdown under the "..." button
+    const menuPanel = createElement('div', 'panel task-panel');
+    const logHoursButton = createElement('button', null, 'Log hours');
+    logHoursButton.type = 'button';
+    const closeButton = createElement('button', 'accent-btn', 'Close');
+    closeButton.type = 'button';
+    menuPanel.append(createElement('h3', 'panel-title', 'Manage task'), logHoursButton, closeButton);
+    attachPanel(menuButton, menuPanel);
+
+    // Wrapper so the panel is placed against the button, not the whole title
+    const menu = createElement('div', 'task-menu-wrap');
+    menu.append(menuButton, menuPanel);
+
     const top = createElement('div', 'task-top');
-    top.append(title, menuButton);
+    top.append(title, menu);
 
     // Details, hidden until hover: a table with labels on top, values underneath
     const columns = [
@@ -213,50 +226,50 @@ function nameSuggestions(courseText)
     return uniqueValues(tasksList.filter(task => task.course.toLowerCase().includes(course)), 'name');
 }
 
-// Grey completion shown after the typed text, from the first term that starts with it. Tab accepts it
-function attachAutocomplete(input, getTerms)
-{
-    // The ghost sits exactly over the input: the typed part is invisible, only the rest shows
-    const wrapper = createElement('div', 'autocomplete');
-    const ghost = createElement('div', 'ghost');
-    ghost.setAttribute('aria-hidden', 'true');
-    const typedPart = createElement('span', 'ghost-typed');
-    const restPart = createElement('span', 'ghost-rest');
-    ghost.append(typedPart, restPart);
-    input.before(wrapper);
-    wrapper.append(input, ghost);
-    input.autocomplete = 'off';   // the browser's own dropdown would cover ours
+// // Grey completion shown after the typed text, from the first term that starts with it. Tab accepts it
+// function attachAutocomplete(input, getTerms)
+// {
+//     // The ghost sits exactly over the input: the typed part is invisible, only the rest shows
+//     const wrapper = createElement('div', 'autocomplete');
+//     const ghost = createElement('div', 'ghost');
+//     ghost.setAttribute('aria-hidden', 'true');
+//     const typedPart = createElement('span', 'ghost-typed');
+//     const restPart = createElement('span', 'ghost-rest');
+//     ghost.append(typedPart, restPart);
+//     input.before(wrapper);
+//     wrapper.append(input, ghost);
+//     input.autocomplete = 'off';   // the browser's own dropdown would cover ours
 
-    let suggestion = null;
+//     let suggestion = null;
 
-    function showSuggestion(term)
-    {
-        suggestion = term;
-        typedPart.textContent = term ? input.value : '';
-        restPart.textContent = term ? term.slice(input.value.length) : '';
-    }
+//     function showSuggestion(term)
+//     {
+//         suggestion = term;
+//         typedPart.textContent = term ? input.value : '';
+//         restPart.textContent = term ? term.slice(input.value.length) : '';
+//     }
 
-    function update()
-    {
-        const text = input.value;
-        const cursorAtEnd = input.selectionStart === text.length;
-        const scrolled = input.scrollWidth > input.clientWidth;   // the ghost can't follow sideways scrolling
-        if (!text || !cursorAtEnd || scrolled) return showSuggestion(null);
+//     function update()
+//     {
+//         const text = input.value;
+//         const cursorAtEnd = input.selectionStart === text.length;
+//         const scrolled = input.scrollWidth > input.clientWidth;   // the ghost can't follow sideways scrolling
+//         if (!text || !cursorAtEnd || scrolled) return showSuggestion(null);
 
-        const lower = text.toLowerCase();
-        showSuggestion(getTerms().find(term => term.length > text.length && term.toLowerCase().startsWith(lower)) ?? null);
-    }
+//         const lower = text.toLowerCase();
+//         showSuggestion(getTerms().find(term => term.length > text.length && term.toLowerCase().startsWith(lower)) ?? null);
+//     }
 
-    input.addEventListener('input', update);
-    input.addEventListener('focus', update);
-    input.addEventListener('blur', () => showSuggestion(null));
-    input.addEventListener('keydown', function(event) {
-        if (event.key !== 'Tab' || event.shiftKey || !suggestion) return;
-        event.preventDefault();   // stay in the box instead of moving to the next one
-        input.value = suggestion;
-        input.dispatchEvent(new Event('input'));   // re-filters, and clears the ghost
-    });
-}
+//     input.addEventListener('input', update);
+//     input.addEventListener('focus', update);
+//     input.addEventListener('blur', () => showSuggestion(null));
+//     input.addEventListener('keydown', function(event) {
+//         if (event.key !== 'Tab' || event.shiftKey || !suggestion) return;
+//         event.preventDefault();   // stay in the box instead of moving to the next one
+//         input.value = suggestion;
+//         input.dispatchEvent(new Event('input'));   // re-filters, and clears the ghost
+//     });
+// }
 
 function createNewTask()
 {
@@ -267,9 +280,9 @@ function createNewTask()
 
     const courseField = createField('Course', { name: 'course', type: 'text', required: true, placeholder: 'CS 101' });
     const nameField = createField('Task name', { name: 'name', type: 'text', required: true, placeholder: 'Lab 3' });
-    const courseInput = courseField.querySelector('input');
-    attachAutocomplete(courseInput, () => uniqueValues(tasksList, 'course'));
-    attachAutocomplete(nameField.querySelector('input'), () => nameSuggestions(courseInput.value));
+    // const courseInput = courseField.querySelector('input');
+    // attachAutocomplete(courseInput, () => uniqueValues(tasksList, 'course'));
+    // attachAutocomplete(nameField.querySelector('input'), () => nameSuggestions(courseInput.value));
 
     // Input names match the database columns, so FormData can read them later
     form.append(
@@ -463,41 +476,60 @@ newTaskButton.addEventListener('click', function() {
     }
 });
 
-// ---------- Filter panel ----------
-const filterButton = document.getElementById('filterButton');
-const filterPanel = document.getElementById('filterPanel');
+// ---------- Panels ----------
+// Only one panel is open at a time: { button, panel }, or null
+let openPanel = null;
 
-function setFilterPanel(open)
+function closePanel()
 {
-    filterPanel.classList.toggle('open', open);
-    filterButton.setAttribute('aria-expanded', open);
+    if (openPanel == null) return;
+    openPanel.panel.classList.remove('open');
+    openPanel.button.setAttribute('aria-expanded', false);
+    openPanel = null;
 }
 
-filterButton.addEventListener('click', function() {
-    setFilterPanel(!filterPanel.classList.contains('open'));
-});
+// Make a button toggle a panel. Opening one closes any other
+function attachPanel(button, panel)
+{
+    button.setAttribute('aria-expanded', false);
+    button.addEventListener('click', function() {
+        const wasOpen = openPanel?.panel === panel;
+        closePanel();
+        if (wasOpen) return;
 
-// Close when clicking anywhere outside the panel (the button handles itself above)
+        panel.classList.add('open');
+        button.setAttribute('aria-expanded', true);
+        openPanel = { button, panel };
+    });
+}
+
+// Close when clicking anywhere outside the open panel (its button handles itself above)
 document.addEventListener('click', function(event) {
-    if (!filterPanel.contains(event.target) && event.target !== filterButton)
-        setFilterPanel(false);
+    if (openPanel && !openPanel.panel.contains(event.target) && !openPanel.button.contains(event.target))
+        closePanel();
 });
 
 document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape' && filterPanel.classList.contains('open'))
+    if (event.key === 'Escape' && openPanel)
     {
-        setFilterPanel(false);
-        filterButton.focus();
+        const button = openPanel.button;
+        closePanel();
+        button.focus();
     }
 });
+
+// ---------- Filter panel ----------
+const filterButton = document.getElementById('filterButton');
+const filterPanel = document.getElementById('filterPanel');
+attachPanel(filterButton, filterPanel);
 
 // Typing in either box re-filters right away, and Tab completes from existing tasks
 const filterCourse = document.getElementById('filterCourse');
 const filterName = document.getElementById('filterName');
 filterCourse.addEventListener('input', renderTasks);
 filterName.addEventListener('input', renderTasks);
-attachAutocomplete(filterCourse, () => uniqueValues(tasksList, 'course'));
-attachAutocomplete(filterName, () => nameSuggestions(filterCourse.value));
+// attachAutocomplete(filterCourse, () => uniqueValues(tasksList, 'course'));
+// attachAutocomplete(filterName, () => nameSuggestions(filterCourse.value));
 
 // Sort buttons: data-sort matches a key in sortMethod. Pressing the active one again flips the direction
 const sortButtons = filterPanel.querySelectorAll('[data-sort]');

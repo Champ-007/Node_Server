@@ -133,16 +133,13 @@ button:hover { background: var(--inner); }
     color: var(--muted);
 }
 
-/* ---------- Filter panel ---------- */
-/* Floats under the buttons, over the tasks. Fades/slides in when .open is added */
-.filter-panel {
+/* ---------- Panels ---------- */
+/* Floats under its button (placed against the nearest positioned parent). Shown when .open is added */
+.panel {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     z-index: 10;
-    width: min(320px, calc(100vw - 32px));
-    display: grid;
-    gap: 12px;
     padding: 16px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -152,9 +149,28 @@ button:hover { background: var(--inner); }
     visibility: hidden;
 }
 
-.filter-panel.open {
+.panel.open {
     visibility: visible;
     transform: none;
+}
+
+/* Heading at the top of a panel */
+.panel-title { margin: 0; font-size: 1rem; font-weight: 500; }
+
+/* ---------- Task panel ---------- */
+/* Stacked buttons, same gap as the sort buttons. max-content so the
+   narrow "..." wrapper doesn't squeeze the panel and wrap the text */
+.task-panel {
+    width: max-content;
+    display: grid;
+    gap: 6px;
+}
+
+/* ---------- Filter panel ---------- */
+.filter-panel {
+    width: min(320px, calc(100vw - 32px));
+    display: grid;
+    gap: 12px;
 }
 
 /* Two by two, so four buttons fit the panel width */
@@ -234,6 +250,13 @@ button:hover { background: var(--inner); }
 .task-title { min-width: 0; }   /* lets long names wrap instead of pushing the button */
 
 .course { display: block; font-size: 0.8rem; color: var(--accent-text); font-weight: 700; }
+
+/* "..." button and its panel */
+.task-menu-wrap {
+    position: relative;   /* the task's panel is placed against this */
+    display: flex;        /* wrapper is exactly the button's height, no text-line gap */
+    flex-shrink: 0;
+}
 
 /* Small "..." button */
 .task-menu {

@@ -1,6 +1,7 @@
 // const process = require('node:process');
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
+const { execArgv } = require('process');
 
 const db = new DatabaseSync(path.join(__dirname, 'database.db'));
 
@@ -13,9 +14,6 @@ db.exec(`CREATE TABLE IF NOT EXISTS tasks (
     estimatedTotalHours REAL CHECK (estimatedTotalHours >= 0),
     loggedHours REAL NOT NULL DEFAULT 0 CHECK (loggedHours >= 0)
 )`);
-
-// dueDate is stored as local 'YYYY-MM-DDTHH:MM'. Older rows were date-only, so start them at 00:00
-db.exec(`UPDATE tasks SET dueDate = dueDate || 'T00:00' WHERE length(dueDate) = 10`);
 
 const statements = {
     addTask:  db.prepare(`INSERT INTO tasks (course, name, dueDate, estimatedTotalHours) VALUES (?, ?, ?, ?)`),
