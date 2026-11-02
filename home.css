@@ -70,6 +70,52 @@ header { border-bottom: 1px solid var(--border); }
     align-items: center;
 }
 
+.header-toggles { display: flex; gap: 20px; }
+
+/* ---------- Slide toggles ---------- */
+/* The real checkbox is invisible but still focusable; the track and knob are drawn after it */
+.switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.switch-label { font-weight: 500; }
+.switch-option { color: var(--muted); font-size: 0.8rem; }
+
+.switch input { position: absolute; opacity: 0; }
+
+.switch-track {
+    position: relative;
+    flex-shrink: 0;
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    transition: background 0.2s;
+}
+
+/* Knob */
+.switch-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: var(--surface);
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch input:checked + .switch-track::after { transform: translateX(18px); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 button {
     font: inherit;
     padding: 6px 14px;
@@ -83,7 +129,7 @@ button {
 
 button:hover { background: var(--inner); }
 
-/* Gold buttons: theme toggle and the + button */
+/* Gold buttons: + and "..." */
 .accent-btn {
     background: var(--accent);
     border-color: var(--accent);
@@ -120,7 +166,7 @@ button:hover { background: var(--inner); }
     gap: 8px;
 }
 
-.card-actions > button { height: 38px; }   /* same height as the toggle button */
+.card-actions > button { height: 38px; }
 
 /* Plain, low-contrast text button (Filter) */
 .text-btn {
@@ -296,6 +342,46 @@ button:hover { background: var(--inner); }
 /* Background color is set from JS, light enough for dark text in both themes */
 .hours .priority { color: var(--on-accent); border-radius: 6px; }
 
+/* ---------- Table style task rows ---------- */
+/* Tighter list so rows read like a table */
+#taskList:has(.task-row) { gap: 6px; }
+
+/* Wider page so the row has room. Header widens too so they stay lined up */
+body:has(.task-row) :is(.header-inner, main) { max-width: 1120px; }
+
+/* One line: course | name | estimated | logged | remaining | time left | priority | "..." */
+.task-row {
+    display: grid;
+    grid-template-columns: minmax(60px, 0.8fr) minmax(0, 2fr) repeat(3, 72px) 110px 72px auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.task-row .course, .task-row .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-row .name { margin: 0; font-size: 0.95rem; }
+
+/* Label on top, value directly below */
+.row-stat { text-align: center; font-size: 0.85rem; line-height: 1.3; }
+.row-stat-label { display: block; color: var(--muted); font-size: 0.7rem; }
+
+.row-stat .priority {
+    display: inline-block;
+    min-width: 48px;
+    padding: 0 6px;
+    color: var(--on-accent);
+    border-radius: 6px;
+}
+
+/* No priority to show: no colored background, so use the normal text color */
+.priority.empty { color: var(--text); }
+
 /* ---------- New task card ---------- */
 .editor {
     border-color: var(--accent);
@@ -366,4 +452,7 @@ button:hover { background: var(--inner); }
 /* One column on phones */
 @media (max-width: 560px) {
     .editor form { grid-template-columns: 1fr; }
+
+    /* Phones always show cards */
+    .task-style-switch { display: none; }
 }

@@ -1,7 +1,7 @@
-
 let tasksList = [];
+let tasksListStyle = 'card';
 let order = 'due';
-let direction = 1;   // 1 = low to high, -1 = high to low
+let direction = 1; // 1 = low to high, -1 = high to low
 
 // What each sort compares, and which way it starts when first picked. null values always go last
 const sortMethod = {
@@ -99,48 +99,60 @@ function updatePriorities()
     const max = Math.max(...values);
     const min = Math.min(...values);
 
-    for (const td of document.querySelectorAll('td[data-task-id]'))
+    // Card style uses a <td>, table style uses a <span>
+    for (const box of document.querySelectorAll('.priority[data-task-id]'))
     {
-        const task = tasksList.find(t => String(t.id) === td.dataset.taskId);
+        const task = tasksList.find(t => String(t.id) === box.dataset.taskId);
         const priority = task ? priorityValue(task) : null;
 
+        box.classList.toggle('empty', priority == null);
         if (priority == null)
         {
-            td.textContent = '';
-            td.style.background = '';
+            box.textContent = '—';
+            box.style.background = '';
             continue;
         }
 
         // 0 = lowest (green), 1 = highest or overdue (red)
         const t = priority === Infinity || max === min ? 1 : (priority - min) / (max - min);
-        td.textContent = priority === Infinity ? 'urgent' : priority.toFixed(2);
-        td.style.background = `hsl(${120 * (1 - t)}, 90%, 70%)`;
+        box.textContent = priority === Infinity ? 'urgent' : priority.toFixed(2);
+        box.style.background = `hsl(${120 * (1 - t)}, 90%, 70%)`;
     }
 }
 
 // Refresh every card's countdown and priority in place (re-rendering would wipe an open new task form)
 function updateCountdowns()
 {
-    for (const th of document.querySelectorAll('th[data-due-date]'))
-        th.textContent = formatTimeLeftHeader(th.dataset.dueDate);
+    // Card style uses a <th>, table style uses a <span>
+    for (const label of document.querySelectorAll('[data-due-date]'))
+        label.textContent = formatTimeLeftHeader(label.dataset.dueDate);
     updatePriorities();
 }
 
+// Phones always get cards, a row is too wide to fit. Matches the phone breakpoint in home.css
+const phoneWidth = window.matchMedia('(max-width: 560px)');
+
+// A card or a dense table row, depending on tasksListStyle
 function createTaskElement(task)
+{
+    return tasksListStyle === 'table' && !phoneWidth.matches ? createTaskRow(task) : createTaskCard(task);
+}
+
+// Estimated, logged and remaining hours as display text
+function hoursText(task)
 {
     const logged = task.loggedHours;
     const estimated = task.estimatedTotalHours;
+    return {
+        estimated: estimated ? `${estimated} h` : '—',
+        logged:    `${logged} h`,
+        remaining: estimated ? `${Math.max(estimated - logged, 0)} h` : '—'
+    };
+}
 
-    // Main Card (tabIndex lets keyboard/touch users "focus" it to see details)
-    const li = createElement('li', 'task');
-    li.tabIndex = 0;
-
-    // Top: course and name on the left, "..." button on the right
-    const title = createElement('div', 'task-title');
-    title.append(
-        createElement('span', 'course', task.course),
-        createElement('h3', 'name', task.name)
-    );
+// "..." button with its manage panel, wrapped so the panel is placed against the button
+function createTaskMenu()
+{
     const menuButton = createElement('button', 'accent-btn task-menu', '...');
     menuButton.type = 'button';
     menuButton.setAttribute('aria-label', 'Task options');
@@ -154,18 +166,70 @@ function createTaskElement(task)
     menuPanel.append(createElement('h3', 'panel-title', 'Manage task'), logHoursButton, closeButton);
     attachPanel(menuButton, menuPanel);
 
-    // Wrapper so the panel is placed against the button, not the whole title
     const menu = createElement('div', 'task-menu-wrap');
     menu.append(menuButton, menuPanel);
+    return menu;
+}
+
+// One line: course, name, hours and time left (label over value), priority, then "..."
+function createTaskRow(task)
+{
+    const li = createElement('li', 'task task-row');
+    li.tabIndex = 0;
+
+    const hours = hoursText(task);
+    const stat = (label, value) => {
+        const cell = createElement('div', 'row-stat');
+        cell.append(typeof label === 'string' ? createElement('span', 'row-stat-label', label) : label, value);
+        return cell;
+    };
+
+    // Same as the card: countdown in the label, due date underneath
+    const timeLeft = createElement('span', 'row-stat-label', task.dueDate ? formatTimeLeftHeader(task.dueDate) : 'Time Left');
+    if (task.dueDate) timeLeft.dataset.dueDate = task.dueDate;   // lets updateCountdowns find it
+
+    const priority = createElement('span', 'priority');   // text and color set by updatePriorities
+    priority.dataset.taskId = task.id;
+
+    const name = createElement('h3', 'name', task.name);
+    name.title = task.name;   // full name, since the row cuts long ones off
+
+    li.append(
+        createElement('span', 'course', task.course),
+        name,
+        stat('Estimated', hours.estimated),
+        stat('Logged',    hours.logged),
+        stat('Remaining', hours.remaining),
+        stat(timeLeft,    task.dueDate ? formatDueDate(task.dueDate) : '—'),
+        stat('Priority',  priority),
+        createTaskMenu()
+    );
+
+    return li;
+}
+
+function createTaskCard(task)
+{
+    // Main Card (tabIndex lets keyboard/touch users "focus" it to see details)
+    const li = createElement('li', 'task');
+    li.tabIndex = 0;
+
+    // Top: course and name on the left, "..." button on the right
+    const title = createElement('div', 'task-title');
+    title.append(
+        createElement('span', 'course', task.course),
+        createElement('h3', 'name', task.name)
+    );
 
     const top = createElement('div', 'task-top');
-    top.append(title, menu);
+    top.append(title, createTaskMenu());
 
     // Details, hidden until hover: a table with labels on top, values underneath
+    const hours = hoursText(task);
     const columns = [
-        ['Estimated', estimated ? `${estimated} h` : '—'],
-        ['Logged',    `${logged} h`],
-        ['Remaining', estimated ? `${Math.max(estimated - logged, 0)} h` : '—']
+        ['Estimated', hours.estimated],
+        ['Logged',    hours.logged],
+        ['Remaining', hours.remaining]
     ];
     const table = createElement('table', 'hours');
     const headRow = table.createTHead().insertRow();
@@ -453,9 +517,21 @@ function showStatus(text)
     status.hidden = false;
 }
 
-const themeButton = document.getElementById('darkMode');
-themeButton.addEventListener('click', function() {
-    document.body.classList.toggle('dark');
+const themeToggle = document.getElementById('darkMode');
+themeToggle.addEventListener('change', function() {
+    document.body.classList.toggle('dark', themeToggle.checked);
+});
+
+// Unchecked = card, checked = table
+const taskStyleToggle = document.getElementById('taskStyle');
+taskStyleToggle.addEventListener('change', function() {
+    tasksListStyle = taskStyleToggle.checked ? 'table' : 'card';
+    renderTasks();
+});
+
+// Swap rows and cards when the window crosses the phone width
+phoneWidth.addEventListener('change', function() {
+    if (tasksListStyle === 'table') renderTasks();
 });
 
 const newTaskButton = document.getElementById('addTaskButton');

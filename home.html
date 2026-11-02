@@ -14,7 +14,21 @@
     <header>
         <div class="header-inner">
             <h1>Champ's Task Management</h1>
-            <button id="darkMode" class="accent-btn">Toggle Dark Mode</button>
+            <div class="header-toggles">
+                <!-- Unchecked = card, checked = table. Hidden on phones -->
+                <label class="switch task-style-switch">
+                    <span class="switch-label">Task style</span>
+                    <span class="switch-option">Card</span>
+                    <input id="taskStyle" type="checkbox" role="switch">
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span class="switch-option">Table</span>
+                </label>
+                <label class="switch">
+                    <span class="switch-label">Dark mode</span>
+                    <input id="darkMode" type="checkbox" role="switch" checked>
+                    <span class="switch-track" aria-hidden="true"></span>
+                </label>
+            </div>
         </div>
     </header>
 
