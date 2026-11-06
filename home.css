@@ -311,6 +311,7 @@ button:hover { background: var(--inner); }
     font-size: 0.8rem;
     line-height: 1.6;
     letter-spacing: 1px;
+    white-space: nowrap;   /* "Log Hours" stays on one line in a tight row */
 }
 
 .name { margin: 6px 0 0; font-size: 1.05rem; font-weight: 500; }
@@ -347,12 +348,21 @@ button:hover { background: var(--inner); }
 #taskList:has(.task-row) { gap: 6px; }
 
 /* Wider page so the row has room. Header widens too so they stay lined up */
-body:has(.task-row) :is(.header-inner, main) { max-width: 1120px; }
+body:has(.task-row) :is(.header-inner, main) { max-width: 1400px; }
 
-/* One line: course | name | estimated | logged | remaining | time left | priority | "..." */
+/* One line: course | name | estimated | logged | remaining | time left | priority | log hours | "..."
+   minmax(smallest, share): columns shrink to the smallest size, and spare width is split by share.
+   Name has the biggest share, so it gains the most and cuts off first. Buttons stay at their own size */
 .task-row {
     display: grid;
-    grid-template-columns: minmax(60px, 0.8fr) minmax(0, 2fr) repeat(3, 72px) 110px 72px auto;
+    grid-template-columns:
+        minmax(60px, 1fr)
+        minmax(80px, 4fr)
+        repeat(3, minmax(56px, 1fr))
+        minmax(110px, 1.5fr)
+        minmax(56px, 1fr)
+        auto
+        auto;
     align-items: center;
     gap: 12px;
     padding: 8px 12px;
@@ -452,7 +462,9 @@ body:has(.task-row) :is(.header-inner, main) { max-width: 1120px; }
 /* One column on phones */
 @media (max-width: 560px) {
     .editor form { grid-template-columns: 1fr; }
+}
 
-    /* Phones always show cards */
+/* Too narrow for a table row, so always show cards. Matches phoneWidth in home.js */
+@media (max-width: 780px) {
     .task-style-switch { display: none; }
 }

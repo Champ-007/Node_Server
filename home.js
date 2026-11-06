@@ -129,8 +129,8 @@ function updateCountdowns()
     updatePriorities();
 }
 
-// Phones always get cards, a row is too wide to fit. Matches the phone breakpoint in home.css
-const phoneWidth = window.matchMedia('(max-width: 560px)');
+// Narrow windows always get cards, a row is too wide to fit. Matches the 780px breakpoint in home.css
+const phoneWidth = window.matchMedia('(max-width: 780px)');
 
 // A card or a dense table row, depending on tasksListStyle
 function createTaskElement(task)
@@ -159,16 +159,20 @@ function createTaskMenu()
 
     // Dropdown under the "..." button
     const menuPanel = createElement('div', 'panel task-panel');
-    const logHoursButton = createElement('button', null, 'Log hours');
-    logHoursButton.type = 'button';
     const closeButton = createElement('button', 'accent-btn', 'Close');
     closeButton.type = 'button';
-    menuPanel.append(createElement('h3', 'panel-title', 'Manage task'), logHoursButton, closeButton);
+    menuPanel.append(createElement('h3', 'panel-title', 'Manage task'), closeButton);
     attachPanel(menuButton, menuPanel);
 
     const menu = createElement('div', 'task-menu-wrap');
     menu.append(menuButton, menuPanel);
     return menu;
+}
+
+function createLogButton()
+{
+    const logHoursButton = createElement('button', 'accent-btn task-menu', 'Log Hours');
+    return logHoursButton;
 }
 
 // One line: course, name, hours and time left (label over value), priority, then "..."
@@ -202,6 +206,7 @@ function createTaskRow(task)
         stat('Remaining', hours.remaining),
         stat(timeLeft,    task.dueDate ? formatDueDate(task.dueDate) : '—'),
         stat('Priority',  priority),
+        createLogButton(),
         createTaskMenu()
     );
 
